@@ -40,20 +40,29 @@ function ensureLoggedIn(req, res, next) {
   throw new UnauthorizedError();
 }
 
+/** Middleware to check if current user is admin
+ * If not, raise Unauthorized.
+ */
 function ensureAdmin(req, res, next) {
   if (res.locals.user?.isAdmin) return next();
   throw new UnauthorizedError();
 }
 
-function ensureCurrentUser(req,res,next){
+/** Middleware to check if current user is valid (accessing their page or admin)
+ * If not, raise Unauthorized.
+ */
+function ensureValidUser(req,res,next){
   const username = req.params?.username;
-  if( username !== res.locals.user?.username) throw new UnauthorizedError("Must be current user");
-  return next()
+  if (username === res.locals.user?.username || res.locals.user?.isAdmin === true) {
+    return next();
+  }
+
+  throw new UnauthorizedError("Must be a valid user");
 }
 
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
   ensureAdmin,
-  ensureCurrentUser
+  ensureValidUser
 };

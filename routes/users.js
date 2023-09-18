@@ -5,7 +5,7 @@
 const jsonschema = require("jsonschema");
 
 const express = require("express");
-const { ensureLoggedIn, ensureCurrentUser, ensureAdmin } = require("../middleware/auth");
+const { ensureLoggedIn, ensureValidUser, ensureAdmin } = require("../middleware/auth");
 const { BadRequestError, UnauthorizedError } = require("../expressError");
 const User = require("../models/user");
 const { createToken } = require("../helpers/tokens");
@@ -67,12 +67,12 @@ router.get("/",
  *
  * Returns { username, firstName, lastName, isAdmin }
  *
- * Authorization required: login, current user
+ * Authorization required: login, current user or admin
  **/
 
 router.get("/:username",
   ensureLoggedIn,
-  ensureCurrentUser,
+  ensureValidUser,
   async function (req, res, next) {
 
     const user = await User.get(req.params.username);
@@ -88,12 +88,12 @@ router.get("/:username",
  *
  * Returns { username, firstName, lastName, email, isAdmin }
  *
- * Authorization required: login, current user
+ * Authorization required: login, current user or admin
  **/
 
 router.patch("/:username",
   ensureLoggedIn,
-  ensureCurrentUser,
+  ensureValidUser,
   async function (req, res, next) {
 
     const validator = jsonschema.validate(
@@ -114,15 +114,13 @@ router.patch("/:username",
 
 /** DELETE /[username]  =>  { deleted: username }
  *
- * Authorization required: login, current user
+ * Authorization required: login, current user or admin
  **/
 
 router.delete("/:username",
   ensureLoggedIn,
-  ensureCurrentUser,
+  ensureValidUser,
   async function (req, res, next) {
-
-    if (username !== res.locals.user.username) throw new UnauthorizedError("Must be current user");
 
     await User.remove(req.params.username);
     return res.json({ deleted: req.params.username });
