@@ -73,6 +73,7 @@ router.get("/", async function (req, res, next) {
   }
 
   // TODO: go this in the model inside findAll method
+
   if (requestObj?.minEmployees && requestObj?.maxEmployees &&
     requestObj?.minEmployees > requestObj?.maxEmployees) {
     throw new BadRequestError("you must have a greater maxEmployee than minEmployee");
