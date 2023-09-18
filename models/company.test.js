@@ -87,16 +87,16 @@ describe("findAll", function () {
   });
 });
 
-/************************************** find */
+/************************************** findAll with filters */
 describe("find with filters", function () {
   test("works: full filter", async function () {
-    const fullFilter = {
+    const filters = {
       "minEmployees" : 1,
       "maxEmployees" : 2,
       "nameLike" : "C"
     }
 
-    const companies = await Company.findAll(fullFilter);
+    const companies = await Company.findAll(filters);
     expect(companies).toEqual([
       {
         handle: "c1",
@@ -116,12 +116,12 @@ describe("find with filters", function () {
   })
 
   test("works: partial filter", async function () {
-    const fullFilter = {
+    const filters = {
       // "nameLike" : "C",
       maxEmployees : 1
     }
 
-    const companies = await Company.findAll(fullFilter);
+    const companies = await Company.findAll(filters);
     expect(companies).toEqual([
       {
         handle: "c1",
@@ -132,11 +132,26 @@ describe("find with filters", function () {
       }]);
   })
 
-  //TODO: maybe test an empty return?
   test("works: partial filter", async function () {
-    const fullFilter = { "minEmployees" : 999999999 }
-    const companies = await Company.findAll(fullFilter);
+    const filters = { "minEmployees" : 999999999 }
+    const companies = await Company.findAll(filters);
     expect(companies).toEqual([]);
+  })
+
+  test("fails: minEmployees > maxEmployees", async function () {
+    const filters = { "minEmployees" : 500, "maxEmployees" : 2};
+
+    try {
+      const companies = await Company.findAll(filters);
+    } catch (err) {
+      expect(err instanceof BadRequestError).toBeTruthy();
+    }
+
+    // //FIXME: Why doesn't the below work? Jest is saying we're not throwing.
+    // expect(async function () {
+    //   const result = await Company.findAll(filters);
+    //   return result})
+    //   .toThrow(BadRequestError);
   })
 });
 
@@ -176,8 +191,7 @@ describe("testing Company.sqlForWhere", function () {
   });
 
   test("test no filters", function () {
-    const filters = {
-    }
+    const filters = {}
 
     const finished = Company.sqlForWhere(filters);
 

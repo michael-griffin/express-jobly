@@ -22,12 +22,12 @@ function authenticateJWT(req, res, next) {
 
     try {
       res.locals.user = jwt.verify(token, SECRET_KEY);
+      console.log('res.locals.user', res.locals.user);
     } catch (err) {
       /* ignore invalid tokens (but don't store user!) */
     }
   }
   return next();
-
 }
 
 /** Middleware to use when they must be logged in.
@@ -40,8 +40,14 @@ function ensureLoggedIn(req, res, next) {
   throw new UnauthorizedError();
 }
 
+function ensureAdmin(req, res, next) {
+  if (res.locals.user?.isAdmin) return next();
+  throw new UnauthorizedError();
+}
+
 
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
+  ensureAdmin
 };

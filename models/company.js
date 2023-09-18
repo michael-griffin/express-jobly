@@ -50,6 +50,23 @@ class Company {
     return company;
   }
 
+  /**
+   * Takes in a filters object similar to below, and returns
+   * an SQL ready WHERE clause, along with the values to pass in for that WHERE
+   * filters can have anywhere from 0-3 of the keys below.
+   * {
+   *   minEmployees : int,
+   *   maxEmployees : int,
+   *   nameLike : string
+   * }
+   *
+   * example output:
+   * {
+   *   whereClause: SqlString,
+   *   values: [value, ...]
+   * }
+   */
+
   static sqlForWhere(filters = {}) {
 
     const jsToSql = {
@@ -59,15 +76,19 @@ class Company {
     };
 
     const keys = Object.keys(filters);
-    //Have to modify up here, when we have key.
 
     if (keys.length === 0) {
-
       return {
         whereClause: "",
         values: []
       };
     }
+
+    if (filters.minEmployees && filters.maxEmployees &&
+      filters.minEmployees > filters.maxEmployees) {
+      throw new BadRequestError("you must have a greater maxEmployee than minEmployee");
+    }
+
     if (filters.nameLike) {
       filters.nameLike = `%${filters.nameLike}%`;
     }
@@ -86,10 +107,8 @@ class Company {
       return sqlString;
     });
 
-
     let fullSqlString = "WHERE " + sqlStrings.join(" AND ");
     let values = Object.values(filters);
-    console.log('modified values is: ', values);
     return {
       whereClause: fullSqlString,
       values: values
@@ -98,11 +117,20 @@ class Company {
   }
 
 
-  /** Find all companies.
+  /** Find all companies by default.
+   *
+   * Can also accept optional filters:
+   * {
+   *   minEmployees : int,
+   *   maxEmployees : int,
+   *   nameLike : string
+   * }
+   *
+   * To find all companies matching filter requirements
    *
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
-  // TODO: combine findALl and find into one method
+  //
   static async findAll(filters) {
     const { whereClause, values } = Company.sqlForWhere(filters);
 
@@ -118,42 +146,6 @@ class Company {
       values);
     return companiesRes.rows;
   }
-  /**
-   * Takes optional parameters:
-   * {minEmployees, maxEmployees, nameLike}
-   *
-   * returns an array of all companies that match these search parameters
-   * [{ handle, name, description, numEmployees, logoUrl }, ...]
-
-   */
-
-  // static async find({minEmployees, maxEmployees, nameLike}) {
-  //   // TODO: put into another function
-  //   let sqlStrings = [];
-  //   if (minEmployees){
-  //     sqlStrings.push(`num_employees >= ${minEmployees}`);
-  //   }
-  //   if (maxEmployees){
-  //     sqlStrings.push(`num_employees <= ${maxEmployees}`);
-  //   }
-  //   if (nameLike){
-  //     sqlStrings.push(`name ILIKE '%${nameLike}%'`);
-  //   }
-
-  //   // TODO: requires parameterized queries
-  //   let fullSqlString = sqlStrings.join(" AND ");
-  //   const companiesRes = await db.query(`
-  //       SELECT handle,
-  //              name,
-  //              description,
-  //              num_employees AS "numEmployees",
-  //              logo_url      AS "logoUrl"
-  //       FROM companies
-  //       WHERE ${fullSqlString}
-  //       ORDER BY name`);
-
-  //   return companiesRes.rows;
-  // }
 
   /** Given a company handle, return data about company.
    *

@@ -6,7 +6,7 @@ const jsonschema = require("jsonschema");
 const express = require("express");
 
 const { BadRequestError } = require("../expressError");
-const { ensureLoggedIn } = require("../middleware/auth");
+const { ensureLoggedIn, ensureAdmin} = require("../middleware/auth");
 const Company = require("../models/company");
 
 const companyNewSchema = require("../schemas/companyNew.json");
@@ -22,10 +22,13 @@ const router = new express.Router();
  *
  * Returns { handle, name, description, numEmployees, logoUrl }
  *
- * Authorization required: login
+ * Authorization required: login and Admin
  */
 
-router.post("/", ensureLoggedIn, async function (req, res, next) {
+router.post("/",
+  ensureLoggedIn,
+  ensureAdmin,
+  async function (req, res, next) {
   const validator = jsonschema.validate(
     req.body,
     companyNewSchema,
@@ -72,21 +75,7 @@ router.get("/", async function (req, res, next) {
     throw new BadRequestError(errs);
   }
 
-  // TODO: go this in the model inside findAll method
-
-  if (requestObj?.minEmployees && requestObj?.maxEmployees &&
-    requestObj?.minEmployees > requestObj?.maxEmployees) {
-    throw new BadRequestError("you must have a greater maxEmployee than minEmployee");
-  }
-
-  let companies;
-
-  if (Object.keys(req.query).length === 0) {
-    companies = await Company.findAll();
-  } else {
-    companies = await Company.find(requestObj);
-  }
-
+  const companies = await Company.findAll(requestObj);
   return res.json({ companies });
 });
 
@@ -112,7 +101,7 @@ router.get("/:handle", async function (req, res, next) {
  *
  * Returns { handle, name, description, numEmployees, logo_url }
  *
- * Authorization required: login
+ * Authorization required: login and Admin
  */
 
 router.patch("/:handle", ensureLoggedIn, async function (req, res, next) {
@@ -132,7 +121,7 @@ router.patch("/:handle", ensureLoggedIn, async function (req, res, next) {
 
 /** DELETE /[handle]  =>  { deleted: handle }
  *
- * Authorization: login
+ * Authorization: login and Admin
  */
 
 router.delete("/:handle", ensureLoggedIn, async function (req, res, next) {

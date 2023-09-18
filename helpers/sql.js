@@ -44,46 +44,4 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   };
 }
 
-/**
- *
- */
-function sqlForWhere(filters ={}, jsToSql ={}){
-  const keys = Object.keys(filters);
-  //Have to modify up here, when we have key.
-
-  if(keys.length === 0){
-
-    return {
-    whereClause : "",
-    values :[]
-    }
-  }
-  if (filters.nameLike) {
-    filters.nameLike = `%${filters.nameLike}%`
-  }
-
-  const sqlStrings = keys.map((colName, idx) => {
-    let sqlString;
-    if (colName === "minEmployees"){
-      sqlString = `${jsToSql[colName] || colName} >= $${idx + 1}`;
-    } else if (colName === "maxEmployees") {
-      sqlString = `${jsToSql[colName] || colName} <= $${idx + 1}`;
-    } else if (colName === "nameLike"){
-      sqlString = `${jsToSql[colName] || colName} ILIKE $${idx + 1}`;
-    } else {
-      throw new BadRequestError("Wrong key for filter");
-    }
-    return sqlString;
-  });
-
-
-  let fullSqlString = "WHERE " + sqlStrings.join(" AND ");
-  let values = Object.values(filters);
-  console.log('modified values is: ', values)
-  return {
-    whereClause : fullSqlString,
-    values : values
-  }
-}
-
-module.exports = { sqlForPartialUpdate, sqlForWhere };
+module.exports = { sqlForPartialUpdate };
