@@ -11,6 +11,7 @@ const Company = require("../models/company");
 
 const companyNewSchema = require("../schemas/companyNew.json");
 const companyUpdateSchema = require("../schemas/companyUpdate.json");
+const companyGetSchema = require("../schemas/companyGet.json");
 
 const router = new express.Router();
 
@@ -51,9 +52,41 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
  */
 
 router.get("/", async function (req, res, next) {
-  const companies = await Company.findAll();
+  console.log('req query is: ', req.query)
+  const validator = jsonschema.validate(
+    req.query,
+    companyGetSchema,
+    { required: false },
+  );
+  //TODO: Check if this isn't crazy: we want it to validate when query is empty right?
+  if (!validator.valid) {
+    const errs = validator.errors.map(e => e.stack);
+    throw new BadRequestError(errs);
+  }
+
+  if (req.query?.minEmployees && req.query?.maxEmployees &&
+     req.query?.minEmployees > req.query?.maxEmployees){
+    throw new BadRequestError("you must have a greater maxEmployee than minEmployee");
+  }
+
+
+  let companies;
+  if (req.query){
+    companies = await Company.find(req.query);
+  } else {
+    companies = await Company.findAll();
+  }
+
   return res.json({ companies });
 });
+
+
+/* Old route, no filters included*/
+// router.get("/", async function (req, res, next) {
+//   const filters = req.body;
+//   const companies = await Company.findAll();
+//   return res.json({ companies });
+// });
 
 /** GET /[handle]  =>  { company }
  *

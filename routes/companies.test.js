@@ -95,6 +95,34 @@ describe("GET /companies", function () {
           ],
     });
   });
+
+});
+
+describe("GET /companies (with filters)", function () {
+  test("ok for valid filter ", async function () {
+    const filters = {
+      "minEmployees" : 1,
+      "maxEmployees" : 2,
+      "nameLike" : "C"
+    };
+
+    const resp = await request(app).get("/companies").query(filters);
+    expect(resp.body).toEqual("asd");
+  });
+
+  test("rejects invalid query: (extra fields)", async function () {
+    const filters = {"minEmployees": 1, "thisisNotaField" : "poor data"};
+
+    const resp = await request(app).get("/companies").query(filters);
+    expect(resp.statusCode).toEqual(400);
+  });
+
+  test("rejects invalid query: (minEmployees > max)", async function () {
+    const filters = { "minEmployees" : 10, "maxEmployees" : 2};
+
+    const resp = await request(app).get("/companies").query(filters);
+    expect(resp.statusCode).toEqual(400);
+  });
 });
 
 /************************************** GET /companies/:handle */

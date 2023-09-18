@@ -87,6 +87,59 @@ describe("findAll", function () {
   });
 });
 
+/************************************** find */
+describe("find with filters", function () {
+  test("works: full filter", async function () {
+    const fullFilter = {
+      "minEmployees" : 1,
+      "maxEmployees" : 2,
+      "nameLike" : "C"
+    }
+
+    const companies = await Company.find(fullFilter);
+    expect(companies).toEqual([
+      {
+        handle: "c1",
+        name: "C1",
+        description: "Desc1",
+        numEmployees: 1,
+        logoUrl: "http://c1.img",
+      },
+      {
+        handle: "c2",
+        name: "C2",
+        description: "Desc2",
+        numEmployees: 2,
+        logoUrl: "http://c2.img",
+      }]);
+
+  })
+
+  test("works: partial filter", async function () {
+    const fullFilter = {
+      // "nameLike" : "C",
+      maxEmployees : 1
+    }
+
+    const companies = await Company.find(fullFilter);
+    expect(companies).toEqual([
+      {
+        handle: "c1",
+        name: "C1",
+        description: "Desc1",
+        numEmployees: 1,
+        logoUrl: "http://c1.img",
+      }]);
+  })
+
+  //TODO: maybe test an empty return?
+  test("works: partial filter", async function () {
+    const fullFilter = { "minEmployees" : 999999999 }
+    const companies = await Company.find(fullFilter);
+    expect(companies).toEqual([]);
+  })
+});
+
 /************************************** get */
 
 describe("get", function () {

@@ -67,6 +67,34 @@ class Company {
     return companiesRes.rows;
   }
 
+  static async find({minEmployees, maxEmployees, nameLike}) {
+
+    let sqlStrings = [];
+    if (minEmployees){
+      sqlStrings.push(`num_employees >= ${minEmployees}`);
+    }
+    if (maxEmployees){
+      sqlStrings.push(`num_employees <= ${maxEmployees}`);
+    }
+    if (nameLike){
+      sqlStrings.push(`name ILIKE '%${nameLike}%'`);
+    }
+
+
+    let fullSqlString = sqlStrings.join(" AND ");
+    const companiesRes = await db.query(`
+        SELECT handle,
+               name,
+               description,
+               num_employees AS "numEmployees",
+               logo_url      AS "logoUrl"
+        FROM companies
+        WHERE ${fullSqlString}
+        ORDER BY name`);
+
+    return companiesRes.rows;
+  }
+
   /** Given a company handle, return data about company.
    *
    * Returns { handle, name, description, numEmployees, logoUrl, jobs }
