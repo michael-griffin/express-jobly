@@ -1,5 +1,6 @@
 "use strict";
 
+
 /** Routes for users. */
 
 const jsonschema = require("jsonschema");
@@ -24,11 +25,10 @@ const router = express.Router();
  * This returns the newly created user and an authentication token for them:
  *  {user: { username, firstName, lastName, email, isAdmin }, token }
  *
- * Authorization required: login, admin
+ * Authorization required: admin
  **/
 
 router.post("/",
-  ensureLoggedIn,
   ensureAdmin,
   async function (req, res, next) {
     const validator = jsonschema.validate(
@@ -51,11 +51,10 @@ router.post("/",
  *
  * Returns list of all users.
  *
- * Authorization required: login, admin
+ * Authorization required: admin
  **/
 
 router.get("/",
-  ensureLoggedIn,
   ensureAdmin,
   async function (req, res, next) {
     const users = await User.findAll();
@@ -67,11 +66,10 @@ router.get("/",
  *
  * Returns { username, firstName, lastName, isAdmin }
  *
- * Authorization required: login, current user or admin
+ * Authorization required: current user or admin
  **/
 
 router.get("/:username",
-  ensureLoggedIn,
   ensureValidUser,
   async function (req, res, next) {
 
@@ -88,11 +86,10 @@ router.get("/:username",
  *
  * Returns { username, firstName, lastName, email, isAdmin }
  *
- * Authorization required: login, current user or admin
+ * Authorization required: current user or admin
  **/
 
 router.patch("/:username",
-  ensureLoggedIn,
   ensureValidUser,
   async function (req, res, next) {
 
@@ -114,11 +111,10 @@ router.patch("/:username",
 
 /** DELETE /[username]  =>  { deleted: username }
  *
- * Authorization required: login, current user or admin
+ * Authorization required: current user or admin
  **/
 
 router.delete("/:username",
-  ensureLoggedIn,
   ensureValidUser,
   async function (req, res, next) {
 

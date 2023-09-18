@@ -1,5 +1,6 @@
 "use strict";
 
+//FIXME: test line 105 of company.js
 const db = require("../db.js");
 const { BadRequestError, NotFoundError } = require("../expressError");
 const Company = require("./company.js");

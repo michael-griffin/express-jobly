@@ -24,7 +24,7 @@ const router = new express.Router();
  *
  * Authorization required: login and Admin
  */
-
+//FIXME: no need for loggedIn middleware
 router.post("/",
   ensureLoggedIn,
   ensureAdmin,
@@ -101,11 +101,11 @@ router.get("/:handle", async function (req, res, next) {
  *
  * Returns { handle, name, description, numEmployees, logo_url }
  *
- * Authorization required: login and Admin
+ * Authorization required: Admin
  */
 
 router.patch("/:handle",
-  ensureLoggedIn,
+  ensureLoggedIn, //TODO:
   ensureAdmin,
   async function (req, res, next) {
     const validator = jsonschema.validate(
@@ -124,11 +124,11 @@ router.patch("/:handle",
 
 /** DELETE /[handle]  =>  { deleted: handle }
  *
- * Authorization: login and Admin
+ * Authorization: Admin
  */
 
 router.delete("/:handle",
-  ensureLoggedIn,
+  ensureLoggedIn, //TODO: no need
   ensureAdmin,
   async function (req, res, next) {
     await Company.remove(req.params.handle);

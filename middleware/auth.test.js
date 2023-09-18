@@ -1,4 +1,5 @@
 "use strict";
+//FIXME: Add tests for both ensureAdmin and ensureValidUser
 
 const jwt = require("jsonwebtoken");
 const { UnauthorizedError } = require("../expressError");
@@ -68,3 +69,5 @@ describe("ensureLoggedIn", function () {
         .toThrow(UnauthorizedError);
   });
 });
+
+

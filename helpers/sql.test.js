@@ -1,15 +1,9 @@
 "use strict";
 
-const request = require("supertest");
 const { sqlForPartialUpdate } = require("./sql");
-const { BadRequestError } = require("../expressError");
-const { commonBeforeEach } = require("../models/_testCommon");
-
 
 
 describe("testing SQL statement converter", function () {
-
-
   test("test successful parse from JS to SQL, all 4 updates for user", function () {
     const testDataToUpdate = {
       firstName: "testfirstUpdated",
@@ -58,13 +52,11 @@ describe("testing SQL statement converter", function () {
 
     const testNoKeysToUpdate = {};
 
-
     const testJsToSql = {
       firstName: "first_name",
       lastName: "last_name",
       isAdmin: "is_admin",
     };
-
 
 
     expect(() => sqlForPartialUpdate(testNoKeysToUpdate,
