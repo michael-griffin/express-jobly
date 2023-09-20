@@ -2,7 +2,6 @@
 
 const { BadRequestError } = require("../expressError");
 
-// THIS NEEDS SOME GREAT DOCUMENTATION.
 
 /**
  * takes in two objects: first is data that needs to be

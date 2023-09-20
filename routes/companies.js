@@ -29,7 +29,7 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
   const validator = jsonschema.validate(
     req.body,
     companyNewSchema,
-    {required: true}
+    { required: true }
   );
   if (!validator.valid) {
     const errs = validator.errors.map(e => e.stack);
@@ -43,50 +43,52 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
 /** GET /  =>
  *   { companies: [ { handle, name, description, numEmployees, logoUrl }, ...] }
  *
- * Can filter on provided search filters:
- * - minEmployees
- * - maxEmployees
- * - nameLike (will find case-insensitive, partial matches)
+ * Can filter on optional provided search filters:
+ {
+      "minEmployees": 1,
+      "maxEmployees": 2,
+      "nameLike": "C"
+    }
  *
  * Authorization required: none
+ *
+ *
  */
 
 router.get("/", async function (req, res, next) {
-  console.log('req query is: ', req.query)
+
+  const requestObj = req.query;
+  if (requestObj.minEmployees !== undefined) requestObj.minEmployees = Number(requestObj.minEmployees);
+  if (requestObj.maxEmployees !== undefined) requestObj.maxEmployees = Number(requestObj.maxEmployees);
+
   const validator = jsonschema.validate(
-    req.query,
+    requestObj,
     companyGetSchema,
-    { required: false },
+    { required: true },
   );
-  //TODO: Check if this isn't crazy: we want it to validate when query is empty right?
+
   if (!validator.valid) {
     const errs = validator.errors.map(e => e.stack);
     throw new BadRequestError(errs);
   }
 
-  if (req.query?.minEmployees && req.query?.maxEmployees &&
-     req.query?.minEmployees > req.query?.maxEmployees){
+  // TODO: go this in the model inside findAll method
+  if (requestObj?.minEmployees && requestObj?.maxEmployees &&
+    requestObj?.minEmployees > requestObj?.maxEmployees) {
     throw new BadRequestError("you must have a greater maxEmployee than minEmployee");
   }
 
-
   let companies;
-  if (req.query){
-    companies = await Company.find(req.query);
-  } else {
+
+  if (Object.keys(req.query).length === 0) {
     companies = await Company.findAll();
+  } else {
+    companies = await Company.find(requestObj);
   }
 
   return res.json({ companies });
 });
 
-
-/* Old route, no filters included*/
-// router.get("/", async function (req, res, next) {
-//   const filters = req.body;
-//   const companies = await Company.findAll();
-//   return res.json({ companies });
-// });
 
 /** GET /[handle]  =>  { company }
  *
@@ -116,7 +118,7 @@ router.patch("/:handle", ensureLoggedIn, async function (req, res, next) {
   const validator = jsonschema.validate(
     req.body,
     companyUpdateSchema,
-    {required:true}
+    { required: true }
   );
   if (!validator.valid) {
     const errs = validator.errors.map(e => e.stack);

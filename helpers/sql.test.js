@@ -8,9 +8,6 @@ const { BadRequestError } = require("../expressError");
 
 describe("testing SQL statement converter", function () {
 
-  // beforeEach(function () {
-
-  // })
 
   test("test successful parse from JS to SQL, all 4 updates for user", function () {
     const testDataToUpdate = {
@@ -83,7 +80,6 @@ describe("testing SQL statement converter", function () {
       isAdmin: true
     };
 
-
     const testJsToSql = {
     };
 
@@ -92,39 +88,7 @@ describe("testing SQL statement converter", function () {
     expect(finished).toEqual({
       "setCols": "\"firstName\"=$1, \"lastName\"=$2, \"email\"=$3, \"isAdmin\"=$4",
       "values": ["testfirstUpdated", "testlastUpdated", "test1@email.com", true]
-    })
+    });
   });
 
 });
-
-// * Data can include:
-// *   { firstName, lastName, password, email, isAdmin }
-
-// testDataToUpdate = {
-//   firstName : "testfirstUpdated",
-//   lastName : "testlastUpdated",
-//   email : "test1@email.com",
-//   isAdmin : true
-// }
-
-// testJsToSql = {
-//   firstName: "first_name",
-//   lastName: "last_name",
-//   isAdmin: "is_admin",
-// }
-
-// function sqlForPartialUpdate(dataToUpdate, jsToSql) {
-//   const keys = Object.keys(dataToUpdate);
-//   if (keys.length === 0) throw new BadRequestError("No data");
-
-//   // {firstName: 'Aliya', age: 32} => ['"first_name"=$1', '"age"=$2']
-//   const cols = keys.map((colName, idx) =>
-//       `"${jsToSql[colName] || colName}"=$${idx + 1}`,
-//   );
-
-//   return {
-//     setCols: cols.join(", "),
-//     values: Object.values(dataToUpdate),
-//   };
-// }
-

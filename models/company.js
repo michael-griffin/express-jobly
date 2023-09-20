@@ -54,7 +54,7 @@ class Company {
    *
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
-
+  // TODO: combine finaALl and find into one method
   static async findAll() {
     const companiesRes = await db.query(`
         SELECT handle,
@@ -66,9 +66,16 @@ class Company {
         ORDER BY name`);
     return companiesRes.rows;
   }
+/**
+ * Takes optional parameters:
+ * {minEmployees, maxEmployees, nameLike}
+ *
+ * returns an array of all companies that match these search parameters
+ * [{ handle, name, description, numEmployees, logoUrl }, ...]
 
+ */
   static async find({minEmployees, maxEmployees, nameLike}) {
-
+    // TODO: put into another function
     let sqlStrings = [];
     if (minEmployees){
       sqlStrings.push(`num_employees >= ${minEmployees}`);
@@ -80,7 +87,7 @@ class Company {
       sqlStrings.push(`name ILIKE '%${nameLike}%'`);
     }
 
-
+    // TODO: requires parameterized queries
     let fullSqlString = sqlStrings.join(" AND ");
     const companiesRes = await db.query(`
         SELECT handle,
