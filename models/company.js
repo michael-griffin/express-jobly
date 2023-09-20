@@ -2,7 +2,7 @@
 
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
-const { sqlForPartialUpdate, sqlForWhere } = require("../helpers/sql");
+const { sqlForPartialUpdate } = require("../helpers/sql");
 
 /** Related functions for companies. */
 
@@ -38,30 +38,73 @@ class Company {
                     description,
                     num_employees AS "numEmployees",
                     logo_url AS "logoUrl"`, [
-          handle,
-          name,
-          description,
-          numEmployees,
-          logoUrl,
-        ],
+      handle,
+      name,
+      description,
+      numEmployees,
+      logoUrl,
+    ],
     );
     const company = result.rows[0];
 
     return company;
   }
 
+  static sqlForWhere(filters = {}) {
+
+    const jsToSql = {
+      minEmployees: "num_employees",
+      maxEmployees: "num_employees",
+      nameLike: "name",
+    };
+
+    const keys = Object.keys(filters);
+    //Have to modify up here, when we have key.
+
+    if (keys.length === 0) {
+
+      return {
+        whereClause: "",
+        values: []
+      };
+    }
+    if (filters.nameLike) {
+      filters.nameLike = `%${filters.nameLike}%`;
+    }
+
+    const sqlStrings = keys.map((colName, idx) => {
+      let sqlString;
+      if (colName === "minEmployees") {
+        sqlString = `${jsToSql[colName] || colName} >= $${idx + 1}`;
+      } else if (colName === "maxEmployees") {
+        sqlString = `${jsToSql[colName] || colName} <= $${idx + 1}`;
+      } else if (colName === "nameLike") {
+        sqlString = `${jsToSql[colName] || colName} ILIKE $${idx + 1}`;
+      } else {
+        throw new BadRequestError("Wrong key for filter");
+      }
+      return sqlString;
+    });
+
+
+    let fullSqlString = "WHERE " + sqlStrings.join(" AND ");
+    let values = Object.values(filters);
+    console.log('modified values is: ', values);
+    return {
+      whereClause: fullSqlString,
+      values: values
+    };
+
+  }
+
+
   /** Find all companies.
    *
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
-  // TODO: combine finaALl and find into one method
+  // TODO: combine findALl and find into one method
   static async findAll(filters) {
-    const { whereClause, values } = sqlForWhere(filters,
-      {
-        minEmployees: "num_employees",
-        maxEmployees: "num_employees",
-        nameLike: "name",
-      });
+    const { whereClause, values } = Company.sqlForWhere(filters);
 
     const companiesRes = await db.query(`
         SELECT handle,
@@ -72,17 +115,17 @@ class Company {
         FROM companies
         ${whereClause}
         ORDER BY name`,
-        values);
+      values);
     return companiesRes.rows;
   }
-/**
- * Takes optional parameters:
- * {minEmployees, maxEmployees, nameLike}
- *
- * returns an array of all companies that match these search parameters
- * [{ handle, name, description, numEmployees, logoUrl }, ...]
+  /**
+   * Takes optional parameters:
+   * {minEmployees, maxEmployees, nameLike}
+   *
+   * returns an array of all companies that match these search parameters
+   * [{ handle, name, description, numEmployees, logoUrl }, ...]
 
- */
+   */
 
   // static async find({minEmployees, maxEmployees, nameLike}) {
   //   // TODO: put into another function
@@ -151,11 +194,11 @@ class Company {
 
   static async update(handle, data) {
     const { setCols, values } = sqlForPartialUpdate(
-        data,
-        {
-          numEmployees: "num_employees",
-          logoUrl: "logo_url",
-        });
+      data,
+      {
+        numEmployees: "num_employees",
+        logoUrl: "logo_url",
+      });
     const handleVarIdx = "$" + (values.length + 1);
 
     const querySql = `

@@ -44,10 +44,20 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   };
 }
 
-
-function sqlForWhere(filters, jsToSql){
+/**
+ *
+ */
+function sqlForWhere(filters ={}, jsToSql ={}){
   const keys = Object.keys(filters);
   //Have to modify up here, when we have key.
+
+  if(keys.length === 0){
+
+    return {
+    whereClause : "",
+    values :[]
+    }
+  }
   if (filters.nameLike) {
     filters.nameLike = `%${filters.nameLike}%`
   }
@@ -59,7 +69,7 @@ function sqlForWhere(filters, jsToSql){
     } else if (colName === "maxEmployees") {
       sqlString = `${jsToSql[colName] || colName} <= $${idx + 1}`;
     } else if (colName === "nameLike"){
-      sqlString = `${jsToSql[colName] || colName} ILIKE '$${idx + 1}'`;
+      sqlString = `${jsToSql[colName] || colName} ILIKE $${idx + 1}`;
     } else {
       throw new BadRequestError("Wrong key for filter");
     }

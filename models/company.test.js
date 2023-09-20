@@ -96,7 +96,7 @@ describe("find with filters", function () {
       "nameLike" : "C"
     }
 
-    const companies = await Company.find(fullFilter);
+    const companies = await Company.findAll(fullFilter);
     expect(companies).toEqual([
       {
         handle: "c1",
@@ -121,7 +121,7 @@ describe("find with filters", function () {
       maxEmployees : 1
     }
 
-    const companies = await Company.find(fullFilter);
+    const companies = await Company.findAll(fullFilter);
     expect(companies).toEqual([
       {
         handle: "c1",
@@ -135,11 +135,57 @@ describe("find with filters", function () {
   //TODO: maybe test an empty return?
   test("works: partial filter", async function () {
     const fullFilter = { "minEmployees" : 999999999 }
-    const companies = await Company.find(fullFilter);
+    const companies = await Company.findAll(fullFilter);
     expect(companies).toEqual([]);
   })
 });
 
+// ****************************************** Company.sqlForWhere
+
+describe("testing Company.sqlForWhere", function () {
+
+
+  test("test successful where clause made", function () {
+    const filters = {
+      "minEmployees" : 1,
+      "maxEmployees" : 2,
+      "nameLike" : "C"
+    }
+
+    const finished = Company.sqlForWhere(filters);
+
+    expect(finished.whereClause).toEqual(
+      "WHERE num_employees >= $1 AND num_employees <= $2 AND name ILIKE $3");
+
+    expect(finished.values).toEqual(
+      [1, 2, '%C%']
+    )
+  })
+
+  test("test partial filters", function () {
+    const filters = {
+      maxEmployees : 1
+    }
+
+
+    const finished = Company.sqlForWhere(filters);
+
+    expect(finished.whereClause).toEqual("WHERE num_employees <= $1")
+    expect(finished.values).toEqual([1])
+
+  });
+
+  test("test no filters", function () {
+    const filters = {
+    }
+
+    const finished = Company.sqlForWhere(filters);
+
+    expect(finished.whereClause).toEqual("")
+    expect(finished.values).toEqual([])
+  });
+
+});
 /************************************** get */
 
 describe("get", function () {

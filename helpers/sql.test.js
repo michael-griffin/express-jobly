@@ -125,12 +125,39 @@ describe("testing sqlForWhere", function () {
     )
   })
 
-  // test("test empty filters", function () {
-  //   const filters = {
-  //     // "nameLike" : "C",
-  //     maxEmployees : 1
-  //   }
-  // });
+  test("test partial filters", function () {
+    const filters = {
+      maxEmployees : 1
+    }
+
+    const jsToSql = {
+      minEmployees: "num_employees",
+      maxEmployees: "num_employees",
+      nameLike: "name",
+    }
+
+    const finished = sqlForWhere(filters, jsToSql);
+
+    expect(finished.whereClause).toEqual("WHERE num_employees <= $1")
+    expect(finished.values).toEqual([1])
+
+  });
+
+  test("test no filters", function () {
+    const filters = {
+    }
+
+    const jsToSql = {
+      minEmployees: "num_employees",
+      maxEmployees: "num_employees",
+      nameLike: "name",
+    }
+
+    const finished = sqlForWhere(filters, jsToSql);
+
+    expect(finished.whereClause).toEqual("")
+    expect(finished.values).toEqual([])
+  });
 
   // test("test wrong filter fields", function () {
   //   const filters = {
