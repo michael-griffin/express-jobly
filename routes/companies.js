@@ -22,11 +22,9 @@ const router = new express.Router();
  *
  * Returns { handle, name, description, numEmployees, logoUrl }
  *
- * Authorization required: login and Admin
+ * Authorization required: Admin
  */
-//FIXME: no need for loggedIn middleware
 router.post("/",
-  ensureLoggedIn,
   ensureAdmin,
   async function (req, res, next) {
     const validator = jsonschema.validate(
@@ -105,7 +103,6 @@ router.get("/:handle", async function (req, res, next) {
  */
 
 router.patch("/:handle",
-  ensureLoggedIn, //TODO:
   ensureAdmin,
   async function (req, res, next) {
     const validator = jsonschema.validate(
