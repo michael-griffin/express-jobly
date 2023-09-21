@@ -161,34 +161,31 @@ class Job {
    * This is a "partial update" --- it's fine if data doesn't contain all the
    * fields; this only changes provided ones.
    *
-   *    Data can include: { title, salary, equity, companyHandle }
+   *    Data can include: { title, salary, equity}
    *    Returns { title, salary, equity, companyHandle }
    *    Throws NotFoundError if not found.
    */
 
   static async update(id, data) {
-    const { setCols, values } = sqlForPartialUpdate(
-      data,
-      {
-        numEmployees: "num_employees",
-        logoUrl: "logo_url",
-      });
-    const handleVarIdx = "$" + (values.length + 1);
+
+    //Note: jsToSql would normally tweak column names, but title/salary/equity are ok
+    const { setCols, values } = sqlForPartialUpdate(data, {});
+    const idVarIdx = "$" + (values.length + 1);
 
     const querySql = `
         UPDATE jobs
         SET ${setCols}
-        WHERE id = ${handleVarIdx}
+        WHERE id = ${idVarIdx}
         RETURNING
             id,
             title,
             salary,
             equity,
             company_handle AS "companyHandle"`;
-    const result = await db.query(querySql, [...values, handle]);
+    const result = await db.query(querySql, [...values, id]);
     const job = result.rows[0];
 
-    if (!job) throw new NotFoundError(`No job: ${handle}`);
+    if (!job) throw new NotFoundError(`No job: ${id}`);
 
     return job;
   }
