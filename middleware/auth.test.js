@@ -6,6 +6,8 @@ const { UnauthorizedError } = require("../expressError");
 const {
   authenticateJWT,
   ensureLoggedIn,
+  ensureAdmin,
+  ensureValidUser
 } = require("./auth");
 
 
@@ -70,4 +72,80 @@ describe("ensureLoggedIn", function () {
   });
 });
 
+describe("test for ensureAdmin", function(){
 
+  test("works if admin privilege is present", function () {
+    const req = {};
+    const res = { locals: { user: { username: "test", isAdmin: true } } };
+    ensureAdmin(req, res, next);
+  });
+
+  test("failed: unauthorized error if no admin privilege is present", function () {
+    const req = {};
+    const res = { locals: { user: { username: "test", isAdmin: false } } };
+    expect(() => ensureAdmin(req, res, next))
+        .toThrow(UnauthorizedError);
+  });
+
+  test("failed: unauthorized error if wrong isAdmin value exists", function () {
+    const req = {};
+    const res = { locals: { user: { username: "test", isAdmin: "true" } } };
+    expect(() => ensureAdmin(req, res, next))
+        .toThrow(UnauthorizedError);
+  });
+
+  test("failed: unauthorized error if nothing assigned to res.locals", function () {
+    const req = {};
+    const res = { locals: {} };
+    expect(() => ensureAdmin(req, res, next))
+        .toThrow(UnauthorizedError);
+  });
+
+
+})
+
+describe("test for ensureValidUser", function(){
+
+  test("test for correct current user, but not an admin", function(){
+
+    const req = {params:{username: "test"}};
+    const res = { locals: { user: { username: "test", isAdmin: false } } };
+    ensureValidUser(req,res,next);
+
+  })
+
+  test("test for not the current user, but is an admin", function(){
+
+    const req = {params:{username: "test"}};
+    const res = { locals: { user: { username: "test2", isAdmin: true } } };
+    ensureValidUser(req,res,next);
+
+  })
+
+  test("failed: not current user and not an admin", function(){
+
+    const req = {params:{username: "test"}};
+    const res = { locals: { user: { username: "test2", isAdmin: false } } };
+    expect(() => ensureValidUser(req, res, next))
+        .toThrow(UnauthorizedError);
+
+  })
+
+  test("failed: no user logged in", function(){
+
+    const req = {params:{username: "test"}};
+    const res = { locals: { } };
+    expect(() => ensureValidUser(req, res, next))
+        .toThrow(UnauthorizedError);
+
+  })
+
+  test("failed: no username param provided in request", function(){
+
+    const req = {};
+    const res = { locals: { user: { username: "test2", isAdmin: true } } };
+    expect(() => ensureValidUser(req, res, next))
+        .toThrow(TypeError);
+
+  })
+})

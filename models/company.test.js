@@ -1,6 +1,5 @@
 "use strict";
 
-//FIXME: test line 105 of company.js
 const db = require("../db.js");
 const { BadRequestError, NotFoundError } = require("../expressError");
 const Company = require("./company.js");
@@ -200,7 +199,22 @@ describe("testing Company.sqlForWhere", function () {
     expect(finished.values).toEqual([])
   });
 
+  test("failed: bad filter properties", function(){
+    const filters = {
+      maxEmployees : 1,
+      numOfPickles: 10
+    }
+
+    try {
+      const finished = Company.sqlForWhere(filters);
+    } catch (err) {
+      expect(err instanceof BadRequestError).toBeTruthy();
+    }
+  })
+
 });
+
+
 /************************************** get */
 
 describe("get", function () {
