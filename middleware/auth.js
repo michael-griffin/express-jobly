@@ -22,7 +22,7 @@ function authenticateJWT(req, res, next) {
 
     try {
       res.locals.user = jwt.verify(token, SECRET_KEY);
-      console.log('res.locals.user', res.locals.user);
+      // console.log('res.locals.user', res.locals.user);
     } catch (err) {
       /* ignore invalid tokens (but don't store user!) */
     }
@@ -45,9 +45,15 @@ function ensureAdmin(req, res, next) {
   throw new UnauthorizedError();
 }
 
+function ensureCurrentUser(req,res,next){
+  const username = req.params?.username;
+  if( username !== res.locals.user?.username) throw new UnauthorizedError("Must be current user");
+  return next()
+}
 
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
-  ensureAdmin
+  ensureAdmin,
+  ensureCurrentUser
 };

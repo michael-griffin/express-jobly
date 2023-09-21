@@ -12,6 +12,7 @@ const {
   commonAfterEach,
   commonAfterAll,
   u1Token,
+  u2Token
 } = require("./_testCommon");
 
 beforeAll(commonBeforeAll);
@@ -33,7 +34,7 @@ describe("POST /users", function () {
           email: "new@email.com",
           isAdmin: false,
         })
-        .set("authorization", `Bearer ${u1Token}`);
+        .set("authorization", `Bearer ${u2Token}`);
     expect(resp.statusCode).toEqual(201);
     expect(resp.body).toEqual({
       user: {
@@ -57,7 +58,7 @@ describe("POST /users", function () {
           email: "new@email.com",
           isAdmin: true,
         })
-        .set("authorization", `Bearer ${u1Token}`);
+        .set("authorization", `Bearer ${u2Token}`);
     expect(resp.statusCode).toEqual(201);
     expect(resp.body).toEqual({
       user: {
@@ -84,13 +85,28 @@ describe("POST /users", function () {
     expect(resp.statusCode).toEqual(401);
   });
 
+  test("unauth for non-admin", async function () {
+    const resp = await request(app)
+        .post("/users")
+        .send({
+          username: "u-new",
+          firstName: "First-new",
+          lastName: "Last-newL",
+          password: "password-new",
+          email: "new@email.com",
+          isAdmin: true,
+        })
+        .set("authorization", `Bearer ${u1Token}`);
+    expect(resp.statusCode).toEqual(401);
+  });
+
   test("bad request if missing data", async function () {
     const resp = await request(app)
         .post("/users")
         .send({
           username: "u-new",
         })
-        .set("authorization", `Bearer ${u1Token}`);
+        .set("authorization", `Bearer ${u2Token}`);
     expect(resp.statusCode).toEqual(400);
   });
 
@@ -105,7 +121,7 @@ describe("POST /users", function () {
           email: "not-an-email",
           isAdmin: true,
         })
-        .set("authorization", `Bearer ${u1Token}`);
+        .set("authorization", `Bearer ${u2Token}`);
     expect(resp.statusCode).toEqual(400);
   });
 });
