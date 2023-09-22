@@ -1,4 +1,6 @@
 "use strict";
+//FIXME:
+
 
 const db = require("../db.js");
 const User = require("../models/user");
@@ -6,7 +8,8 @@ const Company = require("../models/company");
 // const Job = require("../models/job");
 const { createToken } = require("../helpers/tokens");
 
-// let jobId;
+const jobIds = [];
+
 async function commonBeforeAll() {
 
 
@@ -74,13 +77,18 @@ async function commonBeforeAll() {
   //   companyHandle: "c1"
   // })
 
-  await db.query(`
+  const resp = await db.query(`
       INSERT INTO jobs (title, salary, equity, company_handle)
       VALUES ('j1', 1000, .5, 'c1'),
              ('j2', 2000, .6, 'c1'),
              ('j3', 3000, 1, 'c2'),
-             ('j4', 3000, 0, 'c1')`);
+             ('j4', 3000, 0, 'c1')
+      RETURNING id`);
+  const newIds = resp.rows;
 
+  newIds.forEach(id => {
+    jobIds.push(id);
+  })
 }
 
 async function commonBeforeEach() {
@@ -111,5 +119,6 @@ module.exports = {
   commonAfterAll,
   u1Token,
   u2Token,
-  jobIdPromise
+  jobIdPromise,
+  jobIds
 };

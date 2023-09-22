@@ -15,7 +15,8 @@ const {
   commonAfterAll,
   u1Token,
   u2Token,
-  jobIdPromise
+  jobIdPromise,
+  jobIds
 } = require("./_testCommon");
 
 
@@ -315,8 +316,12 @@ describe("DELETE /jobs/:id", function () {
   // });
 
   test("works for admin users", async function () {
-    // const jobId = await jobIdPromise;
-    // console.log("jobId", jobId);
+
+    // const jobResp = await jobIdPromise;
+    // const jobId = jobResp.rows[0].id;
+
+    const jobId = jobIds[0].id;
+    console.log('jobId is: ', jobId);
 
     const resp = await request(app)
       .delete(`/jobs/${jobId}`)
