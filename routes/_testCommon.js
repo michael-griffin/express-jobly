@@ -60,6 +60,14 @@ async function commonBeforeAll() {
     password: "password3",
     isAdmin: false,
   });
+
+  await db.query(`
+      INSERT INTO jobs (title, salary, equity, company_handle)
+      VALUES ('j1', 1000, .5, 'c1'),
+             ('j2', 2000, .6, 'c1'),
+             ('j3', 3000, 1, 'c2'),
+             ('j4', 3000, 0, 'c1')`);
+
 }
 
 async function commonBeforeEach() {
@@ -73,6 +81,8 @@ async function commonAfterEach() {
 async function commonAfterAll() {
   await db.end();
 }
+
+
 
 
 const u1Token = createToken({ username: "u1", isAdmin: false });

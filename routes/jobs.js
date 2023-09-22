@@ -1,5 +1,3 @@
-"use strict";
-
 /** Routes for companies. */
 
 const jsonschema = require("jsonschema");
@@ -7,18 +5,18 @@ const express = require("express");
 
 const { BadRequestError } = require("../expressError");
 const { ensureLoggedIn, ensureAdmin } = require("../middleware/auth");
-const Company = require("../models/company");
+const Job = require("../models/job");
 
-const companyNewSchema = require("../schemas/companyNew.json");
-const companyUpdateSchema = require("../schemas/companyUpdate.json");
-const companyGetSchema = require("../schemas/companyGet.json");
+const jobNewSchema = require("../schemas/jobNew.json");
+const jobUpdateSchema = require("../schemas/jobUpdate.json");
+const jobGetSchema = require("../schemas/jobGet.json");
 
 const router = new express.Router();
 
 
-/** POST / { company } =>  { company }
+/** POST / { job } =>  { job }
  *
- * company should be { handle, name, description, numEmployees, logoUrl }
+ * job should be { handle, name, description, numEmployees, logoUrl }
  *
  * Returns { handle, name, description, numEmployees, logoUrl }
  *
@@ -29,7 +27,7 @@ router.post("/",
   async function (req, res, next) {
     const validator = jsonschema.validate(
       req.body,
-      companyNewSchema,
+      jobNewSchema,
       { required: true }
     );
     if (!validator.valid) {
@@ -37,8 +35,8 @@ router.post("/",
       throw new BadRequestError(errs);
     }
 
-    const company = await Company.create(req.body);
-    return res.status(201).json({ company });
+    const job = await Job.create(req.body);
+    return res.status(201).json({ job });
   });
 
 /** GET /  =>
@@ -59,12 +57,11 @@ router.post("/",
 router.get("/", async function (req, res, next) {
 
   const requestObj = req.query;
-  if (requestObj.minEmployees !== undefined) requestObj.minEmployees = Number(requestObj.minEmployees);
-  if (requestObj.maxEmployees !== undefined) requestObj.maxEmployees = Number(requestObj.maxEmployees);
+  if (requestObj.minSalary !== undefined) requestObj.minSalary = Number(requestObj.minSalary);
 
   const validator = jsonschema.validate(
     requestObj,
-    companyGetSchema,
+    jobGetSchema,
     { required: true },
   );
 
@@ -73,27 +70,27 @@ router.get("/", async function (req, res, next) {
     throw new BadRequestError(errs);
   }
 
-  const companies = await Company.findAll(requestObj);
-  return res.json({ companies });
+  const jobs = await Job.findAll(requestObj);
+  return res.json({ jobs });
 });
 
 
-/** GET /[handle]  =>  { company }
+/** GET /[handle]  =>  { job }
  *
- *  Company is { handle, name, description, numEmployees, logoUrl, jobs }
+ *  job is { handle, name, description, numEmployees, logoUrl, jobs }
  *   where jobs is [{ id, title, salary, equity }, ...]
  *
  * Authorization required: none
  */
 
-router.get("/:handle", async function (req, res, next) {
-  const company = await Company.get(req.params.handle);
-  return res.json({ company });
+router.get("/:id", async function (req, res, next) {
+  const job = await Job.get(req.params.id);
+  return res.json({ job });
 });
 
-/** PATCH /[handle] { fld1, fld2, ... } => { company }
+/** PATCH /[handle] { fld1, fld2, ... } => { job }
  *
- * Patches company data.
+ * Patches job data.
  *
  * fields can be: { name, description, numEmployees, logo_url }
  *
@@ -102,12 +99,12 @@ router.get("/:handle", async function (req, res, next) {
  * Authorization required: Admin
  */
 
-router.patch("/:handle",
+router.patch("/:id",
   ensureAdmin,
   async function (req, res, next) {
     const validator = jsonschema.validate(
       req.body,
-      companyUpdateSchema,
+      jobUpdateSchema,
       { required: true }
     );
     if (!validator.valid) {
@@ -115,8 +112,8 @@ router.patch("/:handle",
       throw new BadRequestError(errs);
     }
 
-    const company = await Company.update(req.params.handle, req.body);
-    return res.json({ company });
+    const job = await Job.update(req.params.id, req.body);
+    return res.json({ job });
   });
 
 /** DELETE /[handle]  =>  { deleted: handle }
@@ -124,11 +121,11 @@ router.patch("/:handle",
  * Authorization: Admin
  */
 
-router.delete("/:handle",
+router.delete("/:id",
   ensureAdmin,
   async function (req, res, next) {
-    await Company.remove(req.params.handle);
-    return res.json({ deleted: req.params.handle });
+    await Job.remove(req.params.id);
+    return res.json({ deleted: req.params.id });
   });
 
 
