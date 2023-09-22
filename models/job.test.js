@@ -242,7 +242,7 @@ describe("test Job.update", function () {
   })
 });
 
-describe("test Job.delete", function () {
+describe("test Job.remove", function () {
   beforeEach(async function () {
     const jobToCreate = {
       "title": "test-job1",
@@ -256,7 +256,248 @@ describe("test Job.delete", function () {
     jobId = seedResult.rows[0].id;
   })
 
-  test("successful delete", async function () {
+  test("remove works: removed job with valid id", async function () {
+
+    const result = await Job.remove(jobId);
+
+    const dbResult = await db.query(
+      `
+      SELECT id
+      FROM jobs
+      WHERE id = ${jobId}
+      `
+    )
+    expect(dbResult.rows.length).toEqual(0)
+
+  })
+
+  test("fails: no id given", async function () {
+
+    try{
+      const result = await Job.remove();
+    }catch(err){
+      expect(err.message).toEqual("No job: undefined");
+    }
+
+  })
+
+  test("fails: invalid id given", async function () {
+
+
+    try{
+      const result = await Job.remove(-10);
+    }catch(err){
+      expect(err.message).toEqual("No job: -10");
+    }
 
   })
 });
+
+describe("tests for Job.sqlForWhere", function(){
+
+  test("sqlForWhere works: valid parameters", function(){
+
+    const filters = {
+      "title" : "c1",
+      "minSalary" : 1500,
+      "hasEquity" : true
+    }
+
+    const finished = Job.sqlForWhere(filters);
+
+    expect(finished.whereClause).toEqual(
+      "WHERE title = $1 AND salary >= $2 AND equity > 0");
+
+    expect(finished.values).toEqual(
+      ["c1", 1500]
+    )
+
+
+  });
+
+  test("sqlForWhere works: valid parameters, hasEquity is false", function(){
+
+    const filters = {
+      "title" : "c1",
+      "minSalary" : 1500,
+      "hasEquity" : false
+    }
+
+    const finished = Job.sqlForWhere(filters);
+
+    expect(finished.whereClause).toEqual(
+      "WHERE title = $1 AND salary >= $2");
+
+    expect(finished.values).toEqual(
+      ["c1", 1500]
+    )
+
+
+  });
+
+  test("sqlForWhere works: valid parameters, one or more properties are missing", function(){
+
+    const filters = {
+      "title" : "c1",
+      "hasEquity" : true
+    }
+
+    const finished = Job.sqlForWhere(filters);
+
+    expect(finished.whereClause).toEqual(
+      "WHERE title = $1 AND equity > 0");
+
+    expect(finished.values).toEqual(
+      ["c1"]
+    )
+
+
+  });
+
+  test("sqlForWhere works: valid parameters, one or more properties are missing", function(){
+
+    const filters = {};
+
+    const finished = Job.sqlForWhere(filters);
+
+    expect(finished.whereClause).toEqual(
+      "");
+
+    expect(finished.values).toEqual(
+      []
+    );
+
+
+  });
+
+  test("sqlForWhere fails, bad filter", function(){
+
+    const filters = {
+      "title" : "c1",
+      "numOfPickles": 10
+    };
+
+    try{
+      const finished = Job.sqlForWhere(filters);
+
+    }catch(err){
+      expect(err instanceof BadRequestError).toBeTruthy();
+    }
+
+  });
+
+})
+
+describe("test for Job.findAll", function(){
+
+  test("works: no filter", async function () {
+    let companies = await Company.findAll();
+    expect(companies).toEqual([
+      {
+        title: "j1",
+        salary: 1000,
+        equity: "0.5",
+        companyHandle: "c1",
+      },
+      {
+        title: "j2",
+        salary: 2000,
+        equity: "0.6",
+        companyHandle: "c1",
+      },
+      {
+        title: "j3",
+        salary: 3000,
+        equity: "1",
+        companyHandle: "c2",
+      },
+      {
+        title: "j4",
+        salary: 3000,
+        equity: "0",
+        companyHandle: "c1",
+      }
+    ]);
+  });
+
+  test("works: full filter", async function () {
+    const filters = {
+      "title" : "c1",
+      "minSalary" : 1500,
+      "hasEquity" : false
+    }
+
+    const jobs = await Job.findAll(filters);
+    expect(jobs).toEqual([
+      {
+        title: "j2",
+        salary: 2000,
+        equity: "0.6",
+        companyHandle: "c1",
+      },
+      {
+        title: "j4",
+        salary: 3000,
+        equity: "0",
+        companyHandle: "c1",
+      }]);
+
+  })
+
+  test("works: partial filter", async function () {
+    const filters = {
+      "minSalary" : 1500,
+      "hasEquity" : false
+    }
+
+    const jobs = await Job.findAll(filters);
+    expect(jobs).toEqual([
+      {
+        title: "j2",
+        salary: 2000,
+        equity: "0.6",
+        companyHandle: "c1",
+      },
+      {
+        title: "j3",
+        salary: 3000,
+        equity: "1",
+        companyHandle: "c2",
+      },
+      {
+        title: "j4",
+        salary: 3000,
+        equity: "0",
+        companyHandle: "c1",
+      }]);
+
+  })
+
+  test("works: filter properties will return no jobs", async function () {
+    const filters = {
+      "minSalary" : 15000,
+      "hasEquity" : false
+    }
+
+    const jobs = await Job.findAll(filters);
+    expect(jobs).toEqual([]);
+
+  })
+
+  test("fails: filter with invalid property", async function () {
+    const filters = {
+      "minSalary" : 1500,
+      "hasEquity" : false,
+      "noPickles": 10
+    }
+
+    try{
+
+      const jobs = await Job.findAll(filters);
+    }catch(err){
+      expect(err.message).toEqual()
+    }
+
+
+  })
+})

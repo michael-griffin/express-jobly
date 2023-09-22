@@ -29,11 +29,11 @@ class Job {
                 salary,
                 equity,
                 company_handle AS "companyHandle"`, [
-                  title,
-                  salary,
-                  equity,
-                  companyHandle
-                ],
+      title,
+      salary,
+      equity,
+      companyHandle
+    ],
     );
     const job = result.rows[0];
     return job;
@@ -59,9 +59,8 @@ class Job {
   static sqlForWhere(filters = {}) {
 
     const jsToSql = {
-      minEmployees: "num_employees",
-      maxEmployees: "num_employees",
-      nameLike: "name",
+      minSalary: "salary",
+      hasEquity: "equity",
     };
 
     const keys = Object.keys(filters);
@@ -73,31 +72,37 @@ class Job {
       };
     }
 
-    if (filters.minEmployees && filters.maxEmployees &&
-      filters.minEmployees > filters.maxEmployees) {
-      throw new BadRequestError("you must have a greater maxEmployee than minEmployee");
-    }
-
-    if (filters.nameLike) {
-      filters.nameLike = `%${filters.nameLike}%`;
+    if (filters.title) {
+      filters.title = `%${filters.title}%`;
     }
 
     const sqlStrings = keys.map((colName, idx) => {
+
       let sqlString;
-      if (colName === "minEmployees") {
+
+      if (colName === "title") {
+
+        sqlString = `title ILIKE $${idx + 1}`;
+
+      } else if (colName === "minSalary") {
+
         sqlString = `${jsToSql[colName] || colName} >= $${idx + 1}`;
-      } else if (colName === "maxEmployees") {
-        sqlString = `${jsToSql[colName] || colName} <= $${idx + 1}`;
-      } else if (colName === "nameLike") {
-        sqlString = `${jsToSql[colName] || colName} ILIKE $${idx + 1}`;
+
+      } else if (colName === "hasEquity" && filters.hasEquity === true) {
+
+        sqlString = `${jsToSql[colName] || colName} > 0`;
+
       } else {
+
         throw new BadRequestError("Wrong key for filter");
+
       }
       return sqlString;
     });
 
     let fullSqlString = "WHERE " + sqlStrings.join(" AND ");
     let values = Object.values(filters);
+
     return {
       whereClause: fullSqlString,
       values: values
