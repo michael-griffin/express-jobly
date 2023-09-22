@@ -293,6 +293,7 @@ describe("test Job.remove", function () {
   })
 });
 
+
 describe("tests for Job.sqlForWhere", function(){
 
   test("sqlForWhere works: valid parameters", function(){
@@ -306,36 +307,35 @@ describe("tests for Job.sqlForWhere", function(){
     const finished = Job.sqlForWhere(filters);
 
     expect(finished.whereClause).toEqual(
-      "WHERE title = $1 AND salary >= $2 AND equity > 0");
+      "WHERE title ILIKE $1 AND salary >= $2 AND equity > 0");
 
     expect(finished.values).toEqual(
-      ["c1", 1500]
+      ["%c1%", 1500]
     )
 
 
   });
 
-  test("sqlForWhere works: valid parameters, hasEquity is false", function(){
+  test("sqlForWhere works: hasEquity is false", function(){
 
     const filters = {
       "title" : "c1",
       "minSalary" : 1500,
       "hasEquity" : false
     }
-
     const finished = Job.sqlForWhere(filters);
 
     expect(finished.whereClause).toEqual(
-      "WHERE title = $1 AND salary >= $2");
+      "WHERE title ILIKE $1 AND salary >= $2");
 
     expect(finished.values).toEqual(
-      ["c1", 1500]
+      ["%c1%", 1500]
     )
 
 
   });
 
-  test("sqlForWhere works: valid parameters, one or more properties are missing", function(){
+  test("sqlForWhere works: one or more properties are missing", function(){
 
     const filters = {
       "title" : "c1",
@@ -345,16 +345,16 @@ describe("tests for Job.sqlForWhere", function(){
     const finished = Job.sqlForWhere(filters);
 
     expect(finished.whereClause).toEqual(
-      "WHERE title = $1 AND equity > 0");
+      "WHERE title ILIKE $1 AND equity > 0");
 
     expect(finished.values).toEqual(
-      ["c1"]
+      ["%c1%"]
     )
 
 
   });
 
-  test("sqlForWhere works: valid parameters, one or more properties are missing", function(){
+  test("sqlForWhere works: empty filters", function(){
 
     const filters = {};
 
@@ -391,8 +391,8 @@ describe("tests for Job.sqlForWhere", function(){
 describe("test for Job.findAll", function(){
 
   test("works: no filter", async function () {
-    let companies = await Company.findAll();
-    expect(companies).toEqual([
+    const jobs = await Job.findAll({});
+    expect(jobs).toEqual([
       {
         title: "j1",
         salary: 1000,
@@ -406,23 +406,23 @@ describe("test for Job.findAll", function(){
         companyHandle: "c1",
       },
       {
-        title: "j3",
-        salary: 3000,
-        equity: "1",
-        companyHandle: "c2",
-      },
-      {
         title: "j4",
         salary: 3000,
         equity: "0",
         companyHandle: "c1",
+      },
+      {
+        title: "j3",
+        salary: 3000,
+        equity: "1",
+        companyHandle: "c2",
       }
     ]);
   });
 
   test("works: full filter", async function () {
     const filters = {
-      "title" : "c1",
+      "title" : "j",
       "minSalary" : 1500,
       "hasEquity" : false
     }
@@ -440,7 +440,14 @@ describe("test for Job.findAll", function(){
         salary: 3000,
         equity: "0",
         companyHandle: "c1",
-      }]);
+      },
+      {
+        title: "j3",
+        salary: 3000,
+        equity: "1",
+        companyHandle: "c2",
+      }
+  ]);
 
   })
 
@@ -451,6 +458,7 @@ describe("test for Job.findAll", function(){
     }
 
     const jobs = await Job.findAll(filters);
+
     expect(jobs).toEqual([
       {
         title: "j2",
@@ -459,29 +467,27 @@ describe("test for Job.findAll", function(){
         companyHandle: "c1",
       },
       {
-        title: "j3",
-        salary: 3000,
-        equity: "1",
-        companyHandle: "c2",
-      },
-      {
         title: "j4",
         salary: 3000,
         equity: "0",
         companyHandle: "c1",
+      },
+      {
+        title: "j3",
+        salary: 3000,
+        equity: "1",
+        companyHandle: "c2",
       }]);
-
   })
 
   test("works: filter properties will return no jobs", async function () {
     const filters = {
-      "minSalary" : 15000,
+      "minSalary" : 150000,
       "hasEquity" : false
     }
 
     const jobs = await Job.findAll(filters);
     expect(jobs).toEqual([]);
-
   })
 
   test("fails: filter with invalid property", async function () {
@@ -492,12 +498,9 @@ describe("test for Job.findAll", function(){
     }
 
     try{
-
       const jobs = await Job.findAll(filters);
     }catch(err){
-      expect(err.message).toEqual()
+      expect(err.message).toEqual("Wrong key for filter");
     }
-
-
   })
 })

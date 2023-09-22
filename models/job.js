@@ -44,9 +44,9 @@ class Job {
    * an SQL ready WHERE clause, along with the values to pass in for that WHERE
    * filters can have anywhere from 0-3 of the keys below.
    * {
-   *   minEmployees : int,
-   *   maxEmployees : int,
-   *   nameLike : string
+   *   title : int,
+   *   minSalary : float,
+   *   hasEquity : string
    * }
    *
    * example output:
@@ -81,28 +81,31 @@ class Job {
       let sqlString;
 
       if (colName === "title") {
-
         sqlString = `title ILIKE $${idx + 1}`;
 
       } else if (colName === "minSalary") {
-
         sqlString = `${jsToSql[colName] || colName} >= $${idx + 1}`;
 
-      } else if (colName === "hasEquity" && filters.hasEquity === true) {
-
-        sqlString = `${jsToSql[colName] || colName} > 0`;
+      } else if (colName === "hasEquity"){
+        if (filters.hasEquity === true) sqlString = `${jsToSql[colName] || colName} > 0`;
 
       } else {
-
         throw new BadRequestError("Wrong key for filter");
 
       }
       return sqlString;
     });
 
-    let fullSqlString = "WHERE " + sqlStrings.join(" AND ");
-    let values = Object.values(filters);
+    let filteredStrings = sqlStrings.filter(string => {
+      if (string !== undefined) return true;
+    });
+    const fullSqlString = "WHERE " + filteredStrings.join(" AND ");
 
+    const values = [];
+    for (let key in filters){
+      if (key !== "hasEquity") values.push(filters[key]);
+    }
+    // let values = Object.values(filters);
     return {
       whereClause: fullSqlString,
       values: values
@@ -135,7 +138,7 @@ class Job {
           company_handle AS "companyHandle"
           FROM jobs
         ${whereClause}
-        ORDER BY company_handle`,
+        ORDER BY company_handle, title`,
       values);
     return jobsRes.rows;
   }
